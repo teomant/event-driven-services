@@ -49,6 +49,7 @@ public class Basket {
         });
     }
 
+    //TODO не возвращать в корзину
     public void revertOrder(UUID orderId, Map<UUID, Integer> order) {
         if (orders.contains(orderId)) {
             order.forEach((id, count) -> {

@@ -52,6 +52,7 @@ public class StorageServiceImpl implements StorageService {
 
     }
 
+    //Не обязательно возвращать туда же
     @Override
     public void revertOrder(UUID orderId) {
         repository.getAll().forEach(storage -> storage.revertOrder(orderId));
