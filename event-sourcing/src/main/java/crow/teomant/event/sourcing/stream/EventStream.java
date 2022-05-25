@@ -21,6 +21,12 @@ public abstract class EventStream<
     private EventProcessor<D, S, ES, BSE> eventProcessor;
 
     protected EventStream(Comparator<D> comparator, S state, List<BSE> events) {
+
+        if (events.stream()
+            .max(Comparator.comparingLong(BSE::getVersion))
+            .map(BSE::getVersion).orElse(0L) < state.getVersion()) {
+            throw new IllegalStateException();
+        }
         this.comparator = comparator;
         this.state = state;
         this.events = events;
