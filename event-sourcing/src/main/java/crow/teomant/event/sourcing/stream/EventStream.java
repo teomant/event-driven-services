@@ -5,12 +5,11 @@ import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class EventStream<
-    D extends Comparable<?>,
+    D extends Comparable<D>,
     S extends State,
     ES extends EventSource,
     BSE extends BaseSourceEvent<D, S, ES>
@@ -28,15 +27,31 @@ public abstract class EventStream<
     }
 
     public void addEvents(List<BSE> addEvents, ApplicationPolicy policy) {
-        this.eventProcessor = getEventProcessor(comparator, events, policy, state, addEvents);
-        eventProcessor.addEvents();
+        this.eventProcessor = getEventProcessor(comparator, events, policy, getStateClone(state));
+        eventProcessor.addEvents(addEvents);
     }
+
+    public S getCurrentState() {
+        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        return eventProcessor.getCurrentState();
+    }
+
+    public S getVersion(Long version) {
+        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        return eventProcessor.getVersion(version);
+    }
+
+    public S getAt(D discr) {
+        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        return eventProcessor.getAt(discr);
+    }
+
+    protected abstract State getStateClone(S state);
 
     protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(Comparator<D> comparator,
                                                                        List<BSE> events,
                                                                        ApplicationPolicy policy,
-                                                                       State readValue,
-                                                                       List<BSE> addEvents);
+                                                                       State state);
 
     public List<String> getErrors() {
         return getCurrentProcessor().getResults().stream()

@@ -5,15 +5,16 @@ import crow.teomant.event.sourcing.state.State;
 import java.io.Serializable;
 import java.util.UUID;
 
-public abstract class BaseSourceEvent<D extends Comparable<?>, S extends State, ES extends EventSource>
+public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, ES extends EventSource>
     implements Serializable {
 
     private final UUID id;
     private final D discriminant;
-    private final Integer version;
+
+    private final Long version;
     private final EventSource eventSource;
 
-    protected BaseSourceEvent(UUID id, D discriminant, Integer version, EventSource eventSource) {
+    protected BaseSourceEvent(UUID id, D discriminant, Long version, EventSource eventSource) {
         this.id = id;
         this.discriminant = discriminant;
         this.version = version;
@@ -39,6 +40,10 @@ public abstract class BaseSourceEvent<D extends Comparable<?>, S extends State, 
 
     public EventSource getEventSource() {
         return eventSource;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
 }
