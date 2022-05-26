@@ -40,6 +40,7 @@ public abstract class EventProcessor<
         } else {
             notApply(addEvents);
         }
+        newEvents.addAll(addEvents);
     }
 
     private void notApply(List<BSE> addEvents) {
@@ -51,7 +52,6 @@ public abstract class EventProcessor<
                     results.add(new ApplicationResult(event.getId(), e.getMessage(), false));
                 }
                 results.add(new ApplicationResult(event.getId(), "", true));
-                newEvents.add(event);
             });
     }
 
@@ -69,7 +69,6 @@ public abstract class EventProcessor<
             .forEach(event -> {
                 event.apply(state);
                 results.add(new ApplicationResult(event.getId(), "", true));
-                newEvents.add(event);
             });
     }
 
@@ -81,7 +80,7 @@ public abstract class EventProcessor<
         return results;
     }
 
-    public S getCurrentState() {
+    public S calculateLastState() {
         rethrow(Collections.emptyList());
         return state;
     }
@@ -100,6 +99,10 @@ public abstract class EventProcessor<
             .filter(event -> event.getDiscriminant().compareTo(discr) < 0 )
             .forEach(event -> event.apply(state));
 
+        return state;
+    }
+
+    public S getState() {
         return state;
     }
 }

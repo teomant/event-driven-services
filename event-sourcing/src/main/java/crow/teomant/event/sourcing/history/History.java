@@ -6,7 +6,6 @@ import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
 import crow.teomant.event.sourcing.stream.EventStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -20,8 +19,8 @@ public abstract class History<
 
     private final UUID id;
 
-    private final List<BaseDomainEvent> domainEvents = new ArrayList<>();
-    private final EventStream<D, S, ES, BSE> eventStream;
+    protected final List<BaseDomainEvent> domainEvents = new ArrayList<>();
+    protected final EventStream<D, S, ES, BSE> eventStream;
 
 
     protected History(UUID id, S state, List<BSE> events) {
@@ -31,7 +30,7 @@ public abstract class History<
 
     protected abstract EventStream<D, S, ES, BSE> getEventStream(S state, List<BSE> events);
 
-    protected abstract Comparator<D> getComparator();
+    protected abstract Comparator<BSE> getComparator();
 
     public UUID getId() {
         return id;
@@ -41,8 +40,8 @@ public abstract class History<
         return domainEvents;
     }
 
-    public S getCurrentState() {
-        return eventStream.getCurrentState();
+    public S calculateLastState() {
+        return eventStream.calculateLastState();
     }
 
     public S getVersion(Long version) {
@@ -51,5 +50,21 @@ public abstract class History<
 
     public S getAt(D discr) {
         return eventStream.getAt(discr);
+    }
+
+    public S getState() {
+        return eventStream.getState();
+    }
+
+    public List<String> getErrors() {
+        return eventStream.getErrors();
+    }
+
+    public Boolean success() {
+        return eventStream.success();
+    }
+
+    public List<BSE> getNewEvents() {
+        return eventStream.getNewEvents();
     }
 }

@@ -15,12 +15,12 @@ public abstract class EventStream<
     BSE extends BaseSourceEvent<D, S, ES>
     > {
 
-    private final Comparator<D> comparator;
+    private final Comparator<BSE> comparator;
     private final S state;
     private final List<BSE> events;
     private EventProcessor<D, S, ES, BSE> eventProcessor;
 
-    protected EventStream(Comparator<D> comparator, S state, List<BSE> events) {
+    protected EventStream(Comparator<BSE> comparator, S state, List<BSE> events) {
 
         if (events.stream()
             .max(Comparator.comparingLong(BSE::getVersion))
@@ -37,9 +37,9 @@ public abstract class EventStream<
         eventProcessor.addEvents(addEvents);
     }
 
-    public S getCurrentState() {
+    public S calculateLastState() {
         this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
-        return eventProcessor.getCurrentState();
+        return eventProcessor.calculateLastState();
     }
 
     public S getVersion(Long version) {
@@ -52,12 +52,12 @@ public abstract class EventStream<
         return eventProcessor.getAt(discr);
     }
 
-    protected abstract State getStateClone(S state);
+    protected abstract S getStateClone(S state);
 
-    protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(Comparator<D> comparator,
+    protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(Comparator<BSE> comparator,
                                                                        List<BSE> events,
                                                                        ApplicationPolicy policy,
-                                                                       State state);
+                                                                       S state);
 
     public List<String> getErrors() {
         return getCurrentProcessor().getResults().stream()
@@ -82,4 +82,7 @@ public abstract class EventStream<
         return Optional.ofNullable(eventProcessor).orElseThrow(IllegalStateException::new);
     }
 
+    public S getState() {
+        return eventProcessor.getState();
+    }
 }
