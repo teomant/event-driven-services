@@ -3,9 +3,9 @@ package crow.teomant.event.sourcing.stream;
 import crow.teomant.event.sourcing.event.source.BaseSourceEvent;
 import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class EventStream<
@@ -17,14 +17,17 @@ public abstract class EventStream<
 
     private final Comparator<BSE> comparator;
     private final S state;
+
     private final List<BSE> events;
+    private final List<BSE> newEvents = new ArrayList<>();
+    private final List<ApplicationResult> results = new ArrayList<>();
     private EventProcessor<D, S, ES, BSE> eventProcessor;
 
     protected EventStream(Comparator<BSE> comparator, S state, List<BSE> events) {
 
         if (events.stream()
             .max(Comparator.comparingLong(BSE::getVersion))
-            .map(BSE::getVersion).orElse(0L) < state.getVersion()) {
+            .map(BSE::getVersion).orElse(0L) < state.getInitialVersion()) {
             throw new IllegalStateException();
         }
         this.comparator = comparator;
@@ -32,24 +35,32 @@ public abstract class EventStream<
         this.events = events;
     }
 
-    public void addEvents(List<BSE> addEvents, ApplicationPolicy policy) {
-        this.eventProcessor = getEventProcessor(comparator, events, policy, getStateClone(state));
-        eventProcessor.addEvents(addEvents);
+    public S addEvents(List<BSE> addEvents, ApplicationPolicy policy) {
+        this.eventProcessor = getEventProcessor(policy);
+        eventProcessor.processEvents(addEvents);
+        if (success()) {
+            eventProcessor.addNewEvents(addEvents);
+        }
+        return eventProcessor.getState();
     }
 
     public S calculateLastState() {
-        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        this.eventProcessor = getEventProcessor(ApplicationPolicy.RETHROW);
         return eventProcessor.calculateLastState();
     }
 
     public S getVersion(Long version) {
-        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        this.eventProcessor = getEventProcessor(ApplicationPolicy.RETHROW);
         return eventProcessor.getVersion(version);
     }
 
     public S getAt(D discr) {
-        this.eventProcessor = getEventProcessor(comparator, events, ApplicationPolicy.RETHROW, getStateClone(state));
+        this.eventProcessor = getEventProcessor(ApplicationPolicy.RETHROW);
         return eventProcessor.getAt(discr);
+    }
+
+    private EventProcessor<D, S, ES, BSE> getEventProcessor(ApplicationPolicy policy) {
+        return getEventProcessor(comparator, events, policy, getStateClone(state), newEvents, results);
     }
 
     protected abstract S getStateClone(S state);
@@ -57,17 +68,19 @@ public abstract class EventStream<
     protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(Comparator<BSE> comparator,
                                                                        List<BSE> events,
                                                                        ApplicationPolicy policy,
-                                                                       S state);
+                                                                       S state,
+                                                                       List<BSE> newEvents,
+                                                                       List<ApplicationResult> results);
 
     public List<String> getErrors() {
-        return getCurrentProcessor().getResults().stream()
+        return results.stream()
             .filter(result -> !result.getSuccess())
             .map(ApplicationResult::getErrorMessage)
             .collect(Collectors.toList());
     }
 
     public Boolean success() {
-        return getCurrentProcessor().getResults().stream()
+        return results.stream()
             .allMatch(ApplicationResult::getSuccess);
     }
 
@@ -75,11 +88,7 @@ public abstract class EventStream<
         if (!success()) {
             throw new IllegalStateException();
         }
-        return getCurrentProcessor().getNewEvents();
-    }
-
-    private EventProcessor<D, S, ES, BSE> getCurrentProcessor() {
-        return Optional.ofNullable(eventProcessor).orElseThrow(IllegalStateException::new);
+        return newEvents;
     }
 
     public S getState() {

@@ -3,7 +3,6 @@ package crow.teomant.event.sourcing.stream;
 import crow.teomant.event.sourcing.event.source.BaseSourceEvent;
 import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,29 +22,37 @@ public abstract class EventProcessor<
     private final ApplicationPolicy applicationPolicy;
     private final S state;
 
-    private final List<BSE> newEvents = new ArrayList<>();
-    private final List<ApplicationResult> results = new ArrayList<>();
+    private final List<BSE> newEvents;
+    private final List<ApplicationResult> results;
 
     protected EventProcessor(Comparator<BSE> comparator, List<BSE> events, ApplicationPolicy applicationPolicy,
-                             S state) {
+                             S state, List<BSE> newEvents, List<ApplicationResult> results) {
         this.comparator = comparator;
         this.events = events;
         this.applicationPolicy = applicationPolicy;
         this.state = state;
+        this.newEvents = newEvents;
+        this.results = results;
     }
 
-    public void addEvents(List<BSE> addEvents) {
+    public void processEvents(List<BSE> addEvents) {
         if (applicationPolicy == ApplicationPolicy.RETHROW) {
             rethrow(addEvents);
         } else {
             notApply(addEvents);
         }
+    }
+
+    public void addNewEvents(List<BSE> addEvents) {
         addEvents.forEach(this::addNewEvent);
     }
 
     private void addNewEvent(BSE event) {
-        Long lastExistingVersion = events.stream().max(comparator).map(BSE::getVersion).orElse(state.getVersion());
-        event.setVersion(lastExistingVersion + newEvents.size() + 1);
+        long version = events.stream()
+            .max(comparator)
+            .map(BSE::getVersion)
+            .orElse(state.getInitialVersion()) + newEvents.size() + 1;
+        event.setVersion(version);
         newEvents.add(event);
     }
 
@@ -62,11 +69,11 @@ public abstract class EventProcessor<
     }
 
     private Stream<BSE> prepareEvents(List<BSE> addEvents) {
-        return Stream.of(events, addEvents)
+        return Stream.of(events, newEvents, addEvents)
             .flatMap(Collection::stream)
             .sorted(comparator)
             .filter(event -> Optional.ofNullable(event.getVersion())
-                .map(version -> version > state.getVersion())
+                .map(version -> version > state.getInitialVersion())
                 .orElse(true));
     }
 

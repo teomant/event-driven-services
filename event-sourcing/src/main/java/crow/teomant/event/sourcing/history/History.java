@@ -52,7 +52,7 @@ public abstract class History<
         return eventStream.getAt(discr);
     }
 
-    public S getState() {
+    public S getCurrentState() {
         return eventStream.getState();
     }
 

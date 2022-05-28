@@ -21,6 +21,14 @@ public class TestHistory extends History<OffsetDateTime, TestState, TestEventSou
             ApplicationPolicy.RETHROW);
     }
 
+    public void anotherNewEvent() {
+        this.eventStream.addEvents(
+            Collections.singletonList(
+                new TestEvent(UUID.randomUUID(), OffsetDateTime.now(), new TestEventSource(UUID.randomUUID()),
+                    "anotherNewValue")),
+            ApplicationPolicy.RETHROW);
+    }
+
     @Override
     protected TestEventStream getEventStream(TestState state,
                                              List<TestEvent> events) {
