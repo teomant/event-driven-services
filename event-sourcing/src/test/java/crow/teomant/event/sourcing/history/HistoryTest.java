@@ -119,6 +119,7 @@ class HistoryTest {
 
         Assertions.assertEquals(newEvents.size(), 1);
         Assertions.assertEquals(newEvents.get(0).getTestValue(), "newValue");
+        Assertions.assertEquals(newEvents.get(0).getVersion(), 3L);
     }
 
 
@@ -142,8 +143,10 @@ class HistoryTest {
         Assertions.assertEquals(state.getVersion(), 0);
 
         Assertions.assertEquals(newEvents.size(), 2);
-        Assertions.assertTrue(newEvents.stream().anyMatch(event -> event.getTestValue().equals("newValue")));
-        Assertions.assertTrue(newEvents.stream().anyMatch(event -> event.getTestValue().equals("newValue2")));
+        Assertions.assertTrue(newEvents.stream()
+            .anyMatch(event -> event.getTestValue().equals("newValue") && event.getVersion().equals(3L)));
+        Assertions.assertTrue(newEvents.stream()
+            .anyMatch(event -> event.getTestValue().equals("newValue2") && event.getVersion().equals(4L)));
     }
 
 
@@ -190,6 +193,31 @@ class HistoryTest {
                 new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(1), 2L, new TestEventSource(randomUUID()),
                     "Applied2"))
             ));
+    }
+
+
+    @Test
+    public void oldEventsNotApplied() {
+        UUID id = randomUUID();
+        TestHistory history = new TestHistory(id, new TestState(id, 2L, ""), Arrays.asList(
+            new TestBadEvent(randomUUID(), OffsetDateTime.now().minusDays(2), 1L, new TestEventSource(randomUUID()),
+                "Applied"),
+            new TestBadEvent(randomUUID(), OffsetDateTime.now().minusDays(1), 2L, new TestEventSource(randomUUID()),
+                "Applied2"))
+        );
+
+        history.applyNewEvent();
+
+        List<TestEvent> newEvents = history.getNewEvents();
+
+        TestState state = history.getState();
+        Assertions.assertTrue(history::success);
+        Assertions.assertEquals(state.getTestValue(), "newValue");
+        Assertions.assertEquals(state.getVersion(), 2);
+
+        Assertions.assertEquals(newEvents.size(), 1);
+        Assertions.assertEquals(newEvents.get(0).getTestValue(), "newValue");
+        Assertions.assertEquals(newEvents.get(0).getVersion(), 3L);
     }
 
 }

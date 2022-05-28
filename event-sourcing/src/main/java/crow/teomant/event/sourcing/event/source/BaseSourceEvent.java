@@ -11,7 +11,7 @@ public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, 
     private final UUID id;
     private final D discriminant;
 
-    private final Long version;
+    private Long version;
     private final EventSource eventSource;
 
     protected BaseSourceEvent(UUID id, D discriminant, Long version, EventSource eventSource) {
@@ -44,6 +44,10 @@ public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, 
 
     public Long getVersion() {
         return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
 }

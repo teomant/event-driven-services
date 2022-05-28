@@ -40,7 +40,13 @@ public abstract class EventProcessor<
         } else {
             notApply(addEvents);
         }
-        newEvents.addAll(addEvents);
+        addEvents.forEach(this::addNewEvent);
+    }
+
+    private void addNewEvent(BSE event) {
+        Long lastExistingVersion = events.stream().max(comparator).map(BSE::getVersion).orElse(state.getVersion());
+        event.setVersion(lastExistingVersion + newEvents.size() + 1);
+        newEvents.add(event);
     }
 
     private void notApply(List<BSE> addEvents) {
@@ -96,7 +102,7 @@ public abstract class EventProcessor<
 
     public S getAt(D discr) {
         prepareEvents(Collections.emptyList())
-            .filter(event -> event.getDiscriminant().compareTo(discr) < 0 )
+            .filter(event -> event.getDiscriminant().compareTo(discr) < 0)
             .forEach(event -> event.apply(state));
 
         return state;
