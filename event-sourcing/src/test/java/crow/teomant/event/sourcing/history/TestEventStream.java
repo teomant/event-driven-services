@@ -10,8 +10,8 @@ import java.util.List;
 
 public class TestEventStream extends EventStream<OffsetDateTime, TestState, TestEventSource, TestEvent> {
 
-    public TestEventStream(Comparator<TestEvent> comparator, TestState state, List<TestEvent> events) {
-        super(comparator, state, events);
+    public TestEventStream(TestState state, List<TestEvent> events) {
+        super(state, events);
     }
 
     @Override
@@ -21,10 +21,9 @@ public class TestEventStream extends EventStream<OffsetDateTime, TestState, Test
 
     @Override
     protected EventProcessor<OffsetDateTime, TestState, TestEventSource, TestEvent> getEventProcessor(
-        Comparator<TestEvent> comparator, List<TestEvent> events, ApplicationPolicy policy, TestState state,
+        List<TestEvent> events, ApplicationPolicy policy, TestState state,
         List<TestEvent> newEvents, List<ApplicationResult> results) {
-        return new TestEventProcessor(Comparator.comparing(TestEvent::getDiscriminant), events, policy, state,
-            newEvents, results);
+        return new TestEventProcessor(events, policy, state, newEvents, results);
 
     }
 }

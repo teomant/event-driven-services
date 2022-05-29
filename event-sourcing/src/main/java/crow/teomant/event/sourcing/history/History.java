@@ -23,14 +23,10 @@ public abstract class History<
     protected final EventStream<D, S, ES, BSE> eventStream;
 
 
-    protected History(UUID id, S state, List<BSE> events) {
+    protected History(UUID id, EventStream<D, S, ES, BSE> eventStream) {
         this.id = id;
-        eventStream = getEventStream(state, events);
+        this.eventStream = eventStream;
     }
-
-    protected abstract EventStream<D, S, ES, BSE> getEventStream(S state, List<BSE> events);
-
-    protected abstract Comparator<BSE> getComparator();
 
     public UUID getId() {
         return id;

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class TestHistory extends History<OffsetDateTime, TestState, TestEventSource, TestEvent> {
     protected TestHistory(UUID id, TestState state, List<TestEvent> events) {
-        super(id, state, events);
+        super(id, new TestEventStream(state, events));
     }
 
     public void applyNewEvent() {
@@ -45,17 +45,6 @@ public class TestHistory extends History<OffsetDateTime, TestState, TestEventSou
                 new TestEvent(UUID.randomUUID(), OffsetDateTime.now(), new TestEventSource(UUID.randomUUID()),
                     "anotherNewValue")),
             ApplicationPolicy.RETHROW);
-    }
-
-    @Override
-    protected TestEventStream getEventStream(TestState state,
-                                             List<TestEvent> events) {
-        return new TestEventStream(getComparator(), state, events);
-    }
-
-    @Override
-    protected Comparator<TestEvent> getComparator() {
-        return Comparator.comparing(TestEvent::getDiscriminant);
     }
 
     public void throwsException() {

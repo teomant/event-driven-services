@@ -1,14 +1,11 @@
 package crow.teomant.event.sourcing.stream;
 
 import crow.teomant.event.sourcing.event.source.BaseSourceEvent;
-import crow.teomant.event.sourcing.event.source.BaseSourceSkipEvent;
 import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public abstract class EventStream<
@@ -18,7 +15,6 @@ public abstract class EventStream<
     BSE extends BaseSourceEvent<D, S, ES>
     > {
 
-    private final Comparator<BSE> comparator;
     private final S state;
 
     private final List<BSE> events;
@@ -26,14 +22,13 @@ public abstract class EventStream<
     private final List<ApplicationResult> results = new ArrayList<>();
     private EventProcessor<D, S, ES, BSE> eventProcessor;
 
-    protected EventStream(Comparator<BSE> comparator, S state, List<BSE> events) {
+    protected EventStream(S state, List<BSE> events) {
 
         if (events.stream()
             .max(Comparator.comparingLong(BSE::getVersion))
             .map(BSE::getVersion).orElse(0L) < state.getInitialVersion()) {
             throw new IllegalStateException();
         }
-        this.comparator = comparator;
         this.state = state;
         this.events = events;
     }
@@ -63,13 +58,12 @@ public abstract class EventStream<
     }
 
     private EventProcessor<D, S, ES, BSE> getEventProcessor(ApplicationPolicy policy) {
-        return getEventProcessor(comparator, events, policy, getStateClone(state), newEvents, results);
+        return getEventProcessor(events, policy, getStateClone(state), newEvents, results);
     }
 
     protected abstract S getStateClone(S state);
 
-    protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(Comparator<BSE> comparator,
-                                                                       List<BSE> events,
+    protected abstract EventProcessor<D, S, ES, BSE> getEventProcessor(List<BSE> events,
                                                                        ApplicationPolicy policy,
                                                                        S state,
                                                                        List<BSE> newEvents,

@@ -8,9 +8,9 @@ import java.util.Comparator;
 import java.util.List;
 
 public class TestEventProcessor extends EventProcessor<OffsetDateTime, TestState, TestEventSource, TestEvent> {
-    public TestEventProcessor(Comparator<TestEvent> comparator, List<TestEvent> events,
+    public TestEventProcessor(List<TestEvent> events,
                               ApplicationPolicy applicationPolicy, TestState state, List<TestEvent> newEvents,
                               List<ApplicationResult> results) {
-        super(comparator, events, applicationPolicy, state, newEvents, results);
+        super(events, applicationPolicy, state, newEvents, results);
     }
 }

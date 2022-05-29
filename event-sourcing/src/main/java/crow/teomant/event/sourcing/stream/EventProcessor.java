@@ -27,14 +27,18 @@ public abstract class EventProcessor<
     private final List<BSE> newEvents;
     private final List<ApplicationResult> results;
 
-    protected EventProcessor(Comparator<BSE> comparator, List<BSE> events, ApplicationPolicy applicationPolicy,
+    protected EventProcessor(List<BSE> events, ApplicationPolicy applicationPolicy,
                              S state, List<BSE> newEvents, List<ApplicationResult> results) {
-        this.comparator = comparator;
+        this.comparator = getComparator();
         this.events = events;
         this.applicationPolicy = applicationPolicy;
         this.state = state;
         this.newEvents = newEvents;
         this.results = results;
+    }
+
+    protected Comparator<BSE> getComparator() {
+        return Comparator.comparing(BSE::getDiscriminant);
     }
 
     public void processEvents(List<? extends BSE> addEvents) {
