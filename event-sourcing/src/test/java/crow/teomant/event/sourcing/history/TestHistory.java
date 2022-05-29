@@ -21,6 +21,24 @@ public class TestHistory extends History<OffsetDateTime, TestState, TestEventSou
             ApplicationPolicy.RETHROW);
     }
 
+    public void applyAndSkipEvent() {
+        UUID toSkip = UUID.randomUUID();
+        TestEventSource eventSource = new TestEventSource(UUID.randomUUID());
+        this.eventStream.addEvents(
+            Arrays.asList(
+                new TestEvent(toSkip, OffsetDateTime.now(), eventSource, "newValue"),
+                new TestSkipEvent(UUID.randomUUID(), OffsetDateTime.now(), eventSource, "", toSkip)),
+            ApplicationPolicy.RETHROW);
+    }
+
+    public void skip(UUID toSkip) {
+        this.eventStream.addEvents(
+            Arrays.asList(
+                new TestSkipEvent(UUID.randomUUID(), OffsetDateTime.now(), new TestEventSource(UUID.randomUUID()), "",
+                    toSkip)),
+            ApplicationPolicy.RETHROW);
+    }
+
     public void anotherNewEvent() {
         this.eventStream.addEvents(
             Collections.singletonList(

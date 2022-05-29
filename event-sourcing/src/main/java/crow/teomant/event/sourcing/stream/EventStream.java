@@ -1,11 +1,14 @@
 package crow.teomant.event.sourcing.stream;
 
 import crow.teomant.event.sourcing.event.source.BaseSourceEvent;
+import crow.teomant.event.sourcing.event.source.BaseSourceSkipEvent;
 import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public abstract class EventStream<

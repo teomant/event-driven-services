@@ -3,6 +3,7 @@ package crow.teomant.event.sourcing.event.source;
 import crow.teomant.event.sourcing.source.EventSource;
 import crow.teomant.event.sourcing.state.State;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, ES extends EventSource>
@@ -10,9 +11,11 @@ public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, 
 
     private final UUID id;
     private final D discriminant;
+    private final EventSource eventSource;
+
+    private final OffsetDateTime createdAt = OffsetDateTime.now();
 
     private Long version;
-    private final EventSource eventSource;
 
     protected BaseSourceEvent(UUID id, D discriminant, Long version, EventSource eventSource) {
         this.id = id;
@@ -48,6 +51,10 @@ public abstract class BaseSourceEvent<D extends Comparable<D>, S extends State, 
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
     }
 
 }

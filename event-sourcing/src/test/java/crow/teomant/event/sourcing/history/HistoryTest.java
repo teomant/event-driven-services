@@ -1,6 +1,7 @@
 package crow.teomant.event.sourcing.history;
 
 import static java.util.UUID.randomUUID;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -124,6 +125,73 @@ class HistoryTest {
     }
 
     @Test
+    public void newEventAppliedAndSkippedTest() {
+        UUID id = randomUUID();
+        TestHistory history = new TestHistory(id, new TestState(id, 0L, ""), new ArrayList<>(Arrays.asList(
+            new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(2), 1L, new TestEventSource(randomUUID()),
+                "Applied"),
+            new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(1), 2L, new TestEventSource(randomUUID()),
+                "Applied2"))
+        ));
+
+        history.applyAndSkipEvent();
+
+        List<TestEvent> newEvents = history.getNewEvents();
+
+        TestState state = history.getCurrentState();
+        Assertions.assertTrue(history::success);
+        Assertions.assertEquals(state.getTestValue(), "Applied2");
+        Assertions.assertEquals(state.getInitialVersion(), 0);
+
+        Assertions.assertEquals(newEvents.size(), 2);
+        Assertions.assertEquals(newEvents.get(0).getTestValue(), "newValue");
+        Assertions.assertEquals(newEvents.get(0).getVersion(), 3L);
+
+        Assertions.assertEquals(newEvents.get(1).getTestValue(), "");
+        Assertions.assertEquals(newEvents.get(1).getVersion(), 4L);
+        Assertions.assertTrue(newEvents.get(1) instanceof TestSkipEvent);
+    }
+
+    @Test
+    public void oldEventSkippedTest() {
+        UUID id = randomUUID();
+        UUID toSkip = randomUUID();
+        TestHistory history = new TestHistory(id, new TestState(id, 0L, ""), new ArrayList<>(Arrays.asList(
+            new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(2), 1L, new TestEventSource(randomUUID()),
+                "Applied"),
+            new TestEvent(toSkip, OffsetDateTime.now().minusDays(1), 2L, new TestEventSource(randomUUID()),
+                "Applied2"))
+        ));
+
+        history.skip(toSkip);
+
+        List<TestEvent> newEvents = history.getNewEvents();
+
+        TestState state = history.getCurrentState();
+        Assertions.assertTrue(history::success);
+        Assertions.assertEquals(state.getTestValue(), "Applied");
+        Assertions.assertEquals(state.getInitialVersion(), 0);
+
+        Assertions.assertEquals(newEvents.size(), 1);
+        Assertions.assertEquals(newEvents.get(0).getTestValue(), "");
+        Assertions.assertEquals(newEvents.get(0).getVersion(), 3L);
+    }
+
+    @Test
+    public void exceptionIfCantSkipTest() {
+        UUID id = randomUUID();
+        UUID toSkip = randomUUID();
+        TestHistory history = new TestHistory(id, new TestState(id, 2L, ""), new ArrayList<>(Arrays.asList(
+            new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(2), 1L, new TestEventSource(randomUUID()),
+                "Applied"),
+            new TestEvent(toSkip, OffsetDateTime.now().minusDays(1), 2L, new TestEventSource(randomUUID()),
+                "Applied2"))
+        ));
+
+        assertThrows(IllegalStateException.class, () -> history.skip(toSkip));
+    }
+
+    @Test
     public void newEventsApplied() {
         UUID id = randomUUID();
         TestHistory history = new TestHistory(id, new TestState(id, 0L, ""), new ArrayList<>(Arrays.asList(
@@ -205,7 +273,7 @@ class HistoryTest {
         Assertions.assertEquals(newEvents.get(2).getTestValue(), "newValue");
         Assertions.assertEquals(newEvents.get(2).getVersion(), 5L);
         Assertions.assertEquals(newEvents.get(3).getTestValue(), "newValue2");
-        Assertions.assertEquals(newEvents.get(3).getVersion(),  6L);
+        Assertions.assertEquals(newEvents.get(3).getVersion(), 6L);
     }
 
     @Test
@@ -218,7 +286,7 @@ class HistoryTest {
                 "Applied2"))
         );
 
-        Assertions.assertThrows(IllegalStateException.class, history::throwsException);
+        assertThrows(IllegalStateException.class, history::throwsException);
     }
 
 
@@ -236,13 +304,13 @@ class HistoryTest {
         Assertions.assertFalse(history::success);
         Assertions.assertEquals(String.join(",", history.getErrors()), "TEST");
 
-        Assertions.assertThrows(IllegalStateException.class, history::getNewEvents);
+        assertThrows(IllegalStateException.class, history::getNewEvents);
 
         Assertions.assertDoesNotThrow(history::dontThrowsException);
         Assertions.assertFalse(history::success);
         Assertions.assertEquals(String.join(",", history.getErrors()), "TEST,TEST");
 
-        Assertions.assertThrows(IllegalStateException.class, history::getNewEvents);
+        assertThrows(IllegalStateException.class, history::getNewEvents);
     }
 
 
@@ -250,7 +318,7 @@ class HistoryTest {
     public void stateAfterLastEvent() {
         UUID id = randomUUID();
 
-        Assertions.assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
             () -> new TestHistory(id, new TestState(id, 3L, ""), Arrays.asList(
                 new TestEvent(randomUUID(), OffsetDateTime.now().minusDays(2), 1L, new TestEventSource(randomUUID()),
                     "Applied"),
