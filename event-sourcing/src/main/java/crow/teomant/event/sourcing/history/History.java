@@ -52,6 +52,10 @@ public abstract class History<
         return eventStream.getState();
     }
 
+    public Long getCurrentVersion() {
+        return eventStream.getCurrentVersion();
+    }
+
     public List<String> getErrors() {
         return eventStream.getErrors();
     }

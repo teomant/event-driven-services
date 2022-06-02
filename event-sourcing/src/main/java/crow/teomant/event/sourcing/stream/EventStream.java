@@ -91,4 +91,9 @@ public abstract class EventStream<
     public S getState() {
         return eventProcessor.getState();
     }
+
+    public Long getCurrentVersion() {
+        return Math.max(events.stream().mapToLong(BSE::getVersion).max().orElse(0),
+            events.stream().mapToLong(BSE::getVersion).max().orElse(0));
+    }
 }

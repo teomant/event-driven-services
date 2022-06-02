@@ -7,38 +7,33 @@ import crow.teomant.event.sourcing.source.EventSource;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-public class RegisterClientSourceEvent extends BaseClientSourceEvent {
+public class UpdateClientSourceEvent extends BaseClientSourceEvent {
 
-    private final String login;
     private final UUID preferedWarehouse;
     private final String name;
 
     @JsonCreator
-    protected RegisterClientSourceEvent(
+    protected UpdateClientSourceEvent(
         @JsonProperty("id") UUID id,
         @JsonProperty("discriminant") OffsetDateTime discriminant,
         @JsonProperty("version") Long version,
         @JsonProperty("eventSource") EventSource eventSource,
-        @JsonProperty("login") String login,
         @JsonProperty("preferedWarehouse") UUID preferedWarehouse,
         @JsonProperty("name") String name) {
         super(id, discriminant, version, eventSource);
-        this.login = login;
         this.preferedWarehouse = preferedWarehouse;
         this.name = name;
     }
 
-    public RegisterClientSourceEvent(UUID id, OffsetDateTime discriminant, EventSource eventSource,
-                                     String login, UUID preferedWarehouse, String name) {
+    public UpdateClientSourceEvent(UUID id, OffsetDateTime discriminant, EventSource eventSource,
+                                   UUID preferedWarehouse, String name) {
         super(id, discriminant, eventSource);
-        this.login = login;
         this.preferedWarehouse = preferedWarehouse;
         this.name = name;
     }
 
     @Override
     public ClientState apply(ClientState clientState) {
-        clientState.setLogin(login);
         clientState.setPreferedWarehouse(preferedWarehouse);
         clientState.setName(name);
 
