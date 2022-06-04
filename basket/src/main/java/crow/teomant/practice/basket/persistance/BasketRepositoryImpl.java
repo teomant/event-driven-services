@@ -14,7 +14,7 @@ public class BasketRepositoryImpl implements BasketRepository {
 
     @Override
     public void save(Basket basket) {
-        storage.put(basket.getUserId(), basket);
+        storage.put(basket.getId(), basket);
     }
 
     @Override

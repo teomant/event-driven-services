@@ -1,19 +1,23 @@
 package crow.teomant.practice.basket.domain;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import lombok.Value;
+import org.apache.commons.collections4.MapUtils;
 
 @Value
 public class Basket {
-    UUID userId;
+    UUID id;
     Map<UUID, Integer> items;
-    Set<UUID> orders;
 
     public void changeItems(Map<UUID, Integer> change) {
         items.putAll(change);
+        cleanIfNoItems();
+    }
+
+    private void cleanIfNoItems() {
         items.keySet().forEach(id -> {
             if (items.get(id) == 0) {
                 items.remove(id);
@@ -22,41 +26,17 @@ public class Basket {
     }
 
     public Map<UUID, Integer> getItems() {
-        return Collections.unmodifiableMap(items);
+        return new HashMap<>(items);
     }
 
-    public void order(UUID orderId, Map<UUID, Integer> order) {
+    public void order(Map<UUID, Integer> order) {
         order.forEach((id, count) -> {
             if (!items.containsKey(id)) {
-                throw new IllegalStateException();
+                return;
             }
-            if (items.get(id) < count) {
-                throw new IllegalStateException();
-            }
+            items.put(id, count < items.get(id) ? items.get(id) - count : 0);
         });
-        if (orders.contains(orderId)) {
-            throw new IllegalStateException();
-        }
-        order.forEach((id, count) -> {
-            Integer inBasket = items.get(id);
-            items.put(id, inBasket - count);
-        });
-        orders.add(orderId);
-        items.keySet().forEach(id -> {
-            if (items.get(id) == 0) {
-                items.remove(id);
-            }
-        });
+        cleanIfNoItems();
     }
 
-    //TODO не возвращать в корзину
-    public void revertOrder(UUID orderId, Map<UUID, Integer> order) {
-        if (orders.contains(orderId)) {
-            order.forEach((id, count) -> {
-                Integer inBasket = items.getOrDefault(id, 0);
-                items.put(id, inBasket + count);
-            });
-        }
-        orders.remove(orderId);
-    }
 }

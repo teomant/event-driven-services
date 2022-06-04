@@ -20,6 +20,13 @@ repositories {
 }
 
 dependencies {
+
+	implementation('crow.teomant:messagin-api:1.0.0-SNAPSHOT')
+	implementation('crow.teomant:domain-events:1.0.0-SNAPSHOT')
+	implementation('crow.teomant:common:1.0.0-SNAPSHOT')
+
+	implementation 'org.apache.commons:commons-collections4:4.4'
+
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok'

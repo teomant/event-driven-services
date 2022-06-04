@@ -1,8 +1,10 @@
 package crow.teomant.client.domain.events.domain;
 
-import crow.teomant.event.sourcing.source.EventSource;
+import crow.teomant.common.EventSource;
 import java.util.UUID;
+import lombok.Getter;
 
+@Getter
 public class RegisterClientDomainEvent extends BaseClientDomainEvent {
     private final UUID clientId;
     private final String login;
@@ -17,5 +19,10 @@ public class RegisterClientDomainEvent extends BaseClientDomainEvent {
         this.clientId = clientId;
         this.login = login;
         this.preferedWarehouse = preferedWarehouse;
+    }
+
+    @Override
+    public EventSource getEventSource() {
+        return (EventSource) super.getEventSource();
     }
 }

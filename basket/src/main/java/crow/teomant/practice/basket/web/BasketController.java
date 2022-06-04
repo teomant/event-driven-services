@@ -4,7 +4,6 @@ import crow.teomant.practice.basket.domain.Basket;
 import crow.teomant.practice.basket.domain.BasketService;
 import java.util.Map;
 import java.util.UUID;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class BasketController {
     private final BasketService basketService;
 
-    @PostMapping("/new")
-    public void create(@RequestBody CreateDto dto) {
-        basketService.create(dto.getId());
-    }
-
     @GetMapping("/{id}")
     public Basket get(@PathVariable UUID id) {
         return basketService.get(id);
@@ -34,8 +28,4 @@ public class BasketController {
         basketService.change(id, items);
     }
 
-    @Data
-    public static class CreateDto {
-        private UUID id;
-    }
 }

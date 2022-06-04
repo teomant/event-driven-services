@@ -5,19 +5,23 @@ import crow.teomant.client.domain.events.source.BaseClientSourceEvent;
 import crow.teomant.client.domain.history.ClientHistory;
 import crow.teomant.client.domain.history.ClientState;
 import crow.teomant.common.EventSource;
+import crow.teomant.domain.events.DomainEvents;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
     private final Map<UUID, ClientState> stateMap = new ConcurrentHashMap<>();
     private final Map<UUID, List<BaseClientSourceEvent>> eventsListsMap = new ConcurrentHashMap<>();
+    private final DomainEvents domainEvents;
 
     @Override
     public ClientState register(String login, UUID preferedWarehouse, String name) {
@@ -33,6 +37,7 @@ public class ClientServiceImpl implements ClientService {
 
         List<BaseClientSourceEvent> events = eventsListsMap.computeIfAbsent(id, (x) -> new ArrayList<>());
         events.addAll(history.getNewEvents());
+        history.getDomainEvents().forEach(domainEvents::raise);
 
         return history.getCurrentState();
     }
@@ -59,6 +64,7 @@ public class ClientServiceImpl implements ClientService {
 
         List<BaseClientSourceEvent> events = eventsListsMap.computeIfAbsent(id, (x) -> new ArrayList<>());
         events.addAll(history.getNewEvents());
+        history.getDomainEvents().forEach(domainEvents::raise);
 
         return currentState;
     }

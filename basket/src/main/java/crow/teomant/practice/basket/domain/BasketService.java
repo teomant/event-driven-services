@@ -5,13 +5,11 @@ import java.util.UUID;
 
 public interface BasketService {
 
-    void create(UUID userId);
+    void create(UUID clientId);
 
-    Basket change(UUID userId, Map<UUID, Integer> items);
+    Basket change(UUID clientId, Map<UUID, Integer> items);
 
-    void order(UUID orderId, UUID userId, Map<UUID, Integer> items);
-
-    void revertOrder(UUID orderId, UUID userId, Map<UUID, Integer> items);
+    void order(UUID clientId, Map<UUID, Integer> items);
 
     Basket get(UUID id);
 }
