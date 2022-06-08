@@ -1,6 +1,7 @@
 package crow.teomant.practice.order.domain;
 
 import crow.teomant.practice.order.messaging.OrderKafkaPublisher;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,8 +16,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderKafkaPublisher publisher;
 
     @Override
-    public UUID create(UUID userId, Map<UUID, Integer> items, Integer distance) {
-        Order order = new Order(UUID.randomUUID(), userId, items, distance);
+    public UUID create(UUID userId, List<Order.Piece> pieces, UUID distance) {
+        Order order = new Order(UUID.randomUUID(), userId, pieces, distance);
         repository.save(order);
 
         return order.getId();

@@ -19,30 +19,30 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping("/new")
-    public UUID create(@RequestBody CreateDto dto) {
-        return orderService.create(dto.getUserId(), dto.getItems(), dto.getDistance());
-    }
-
-    @GetMapping("/{id}")
-    public Order get(@PathVariable UUID id) {
-        return orderService.get(id);
-    }
-
-    @GetMapping("/{id}/start")
-    public void start(@PathVariable UUID id) {
-        orderService.start(id);
-    }
-
-    @GetMapping("/{id}/revert")
-    public void revert(@PathVariable UUID id) {
-        orderService.revert(id);
-    }
-
-    @Data
-    public static class CreateDto {
-        private UUID userId;
-        private Map<UUID, Integer> items;
-        private Integer distance;
-    }
+//    @PostMapping("/new")
+//    public UUID create(@RequestBody CreateDto dto) {
+//        return orderService.create(dto.getUserId(), dto.getItems(), dto.getDistance());
+//    }
+//
+//    @GetMapping("/{id}")
+//    public Order get(@PathVariable UUID id) {
+//        return orderService.get(id);
+//    }
+//
+//    @GetMapping("/{id}/start")
+//    public void start(@PathVariable UUID id) {
+//        orderService.start(id);
+//    }
+//
+//    @GetMapping("/{id}/revert")
+//    public void revert(@PathVariable UUID id) {
+//        orderService.revert(id);
+//    }
+//
+//    @Data
+//    public static class CreateDto {
+//        private UUID userId;
+//        private Map<UUID, Integer> items;
+//        private Integer distance;
+//    }
 }

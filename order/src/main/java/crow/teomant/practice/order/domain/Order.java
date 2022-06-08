@@ -1,6 +1,6 @@
 package crow.teomant.practice.order.domain;
 
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import lombok.Value;
 
@@ -8,6 +8,13 @@ import lombok.Value;
 public class Order {
     UUID id;
     UUID userId;
-    Map<UUID, Integer> items;
-    Integer distance;
+    List<Piece> pieces;
+    UUID destination;
+
+    @Value
+    public static class Piece {
+        UUID itemId;
+        Long price;
+        Integer number;
+    }
 }
