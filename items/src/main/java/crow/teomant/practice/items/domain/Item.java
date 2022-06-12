@@ -8,4 +8,5 @@ import lombok.Value;
 public class Item {
     UUID id;
     AbstractValueNode description;
+    ItemType itemType;
 }

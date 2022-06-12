@@ -21,8 +21,8 @@ public class ItemMongoRepositoryAdapter {
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper mapper;
 
-    public void save(Item item) {
-        repository.save(new ItemDocument(item.getId(), item.getDescription().getValue()));
+    public UUID save(Item item) {
+        return repository.save(new ItemDocument(item.getId(), item.getDescription().getValue(), new ItemTypeDocument(item.getItemType().getId(), mapper.convertValue(item.getItemType().getDefinition(), HashMap.class)))).getId();
     }
 
     public UUID save(ItemType itemType) {
@@ -31,16 +31,20 @@ public class ItemMongoRepositoryAdapter {
             .getId();
     }
 
-    public void Type(Item item) {
-        repository.save(new ItemDocument(item.getId(), item.getDescription().getValue()));
-    }
-
     public Item get() {
         Query query = new Query();
         query.addCriteria(Criteria.where("description.test.test").is("test"));
         ItemDocument one = mongoTemplate.find(query, ItemDocument.class).get(0);
 
-        return new Item(one.getId(), AbstractValueNode.of(one.getDescription()));
+        return new Item(one.getId(), AbstractValueNode.of(one.getDescription()), new ItemType(one.getItemTypeDocument().getId(),
+            mapper.convertValue(one.getItemTypeDocument().getDefinition(), AbstractDefinitionNode.class)));
+    }
+
+    public Item get(UUID id) {
+        ItemDocument one = mongoTemplate.findById(id, ItemDocument.class);
+
+        return new Item(one.getId(), AbstractValueNode.of(one.getDescription()), new ItemType(one.getItemTypeDocument().getId(),
+            mapper.convertValue(one.getItemTypeDocument().getDefinition(), AbstractDefinitionNode.class)));
     }
 
     public ItemType getType(UUID id) {

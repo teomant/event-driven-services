@@ -25,14 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ItemController {
     private final ItemMongoRepositoryAdapter repository;
 
-    @GetMapping("/create")
-    public void create() {
+    @GetMapping("/create/{typeId}")
+    public UUID create(@PathVariable("typeId") UUID typeId) {
+        ItemType type = repository.getType(typeId);
         HashMap<String, Object> inner = new HashMap<>();
         inner.put("test", "test");
         HashMap<String, Object> outer = new HashMap<>();
         outer.put("test", inner);
 
-        repository.save(new Item(UUID.randomUUID(), AbstractValueNode.of(outer)));
+        return repository.save(new Item(UUID.randomUUID(), AbstractValueNode.of(outer), type));
     }
 
     @GetMapping("/createType")
@@ -58,6 +59,12 @@ public class ItemController {
     public ItemType getType(@PathVariable("id") UUID id) {
 
         return repository.getType(id);
+    }
+
+    @GetMapping("/get/{id}")
+    public Item get(@PathVariable("id") UUID id) {
+
+        return repository.get(id);
     }
 
     @GetMapping("/get")
