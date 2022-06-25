@@ -29,7 +29,7 @@ public class ItemController {
     public UUID create(@PathVariable("typeId") UUID typeId) {
         ItemType type = repository.getType(typeId);
         HashMap<String, Object> inner = new HashMap<>();
-        inner.put("test", "test");
+        inner.put("test", "teeeeeeeeeeeeeeeeeeeeeeeesting");
         HashMap<String, Object> outer = new HashMap<>();
         outer.put("test", inner);
 
@@ -65,6 +65,12 @@ public class ItemController {
     public Item get(@PathVariable("id") UUID id) {
 
         return repository.get(id);
+    }
+
+    @GetMapping("/find")
+    public Item find() {
+
+        return repository.find();
     }
 
     @GetMapping("/get")
