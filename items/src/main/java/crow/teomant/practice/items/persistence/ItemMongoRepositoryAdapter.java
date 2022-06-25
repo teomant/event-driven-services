@@ -35,17 +35,16 @@ public class ItemMongoRepositoryAdapter {
 
     public Item find() {
         Query query = new Query();
-        HashMap<Object, Object> inner = new HashMap<>();
-        inner.put("value", "in");
-        inner.put("path", "test");
-        HashMap<Object, Object> middle = new HashMap<>();
-        middle.put("path", "test");
-        middle.put("value", inner);
-        HashMap<Object, Object> top = new HashMap<>();
-        top.put("path", "description");
-        top.put("value", middle);
+        HashMap<String, Object> inner = new HashMap<>();
+        inner.put("test", "fu");
+        inner.put("test1", 3);
+        HashMap<String, Object> meta = new HashMap<>();
+        inner.put("metadata", meta);
+        meta.put("test1", "gt");
+        HashMap<String, Object> outer = new HashMap<>();
+        outer.put("test", inner);
 
-        query.addCriteria(CriteriaBuilder.build(AbstractSearchNode.of(top)));
+        query.addCriteria(CriteriaBuilder.build(AbstractSearchNode.of(outer), "description"));
         ItemDocument one = mongoTemplate.find(query, ItemDocument.class).get(0);
 
         return new Item(one.getId(), AbstractValueNode.of(one.getDescription()),

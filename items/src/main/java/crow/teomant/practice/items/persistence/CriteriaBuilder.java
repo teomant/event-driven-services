@@ -8,107 +8,122 @@ import crow.teomant.practice.items.node.search.StringSearchNode;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public class CriteriaBuilder {
 
-    public static Criteria build(AbstractSearchNode node) {
-        Criteria criteria = new Criteria();
-        List<String> fullPath = new ArrayList<>();
+    public static Criteria build(AbstractSearchNode node, String pathStart) {
+        ArrayList<Criteria> criteriaList = new ArrayList<>();
         if (node instanceof ObjectSearchNode) {
             ObjectSearchNode objectNode = (ObjectSearchNode) node;
-            if (objectNode.get("value") instanceof StringSearchNode) {
-                buildString(criteria, fullPath, objectNode);
-            }
-            if (objectNode.get("value") instanceof NumericSearchNode) {
-                buildNumeric(criteria, fullPath, objectNode);
-            }
-            if (objectNode.get("value") instanceof BooleanSearchNode) {
-                buildBoolean(criteria, fullPath, objectNode);
-            }
-            if (objectNode.get("value") instanceof ObjectSearchNode) {
-                buildObject(criteria, fullPath, objectNode);
-            }
+            ArrayList<String> fullPath = new ArrayList<>();
+            fullPath.add(pathStart);
+            objectNode.getValue().entrySet().stream()
+                .filter(entry -> !entry.getKey().equals("metadata"))
+                .forEach(entry -> {
+                    fullPath.add(entry.getKey());
+                    if (entry.getValue() instanceof StringSearchNode) {
+                        buildString(criteriaList, fullPath, (StringSearchNode) entry.getValue());
+                    }
+                    if (entry.getValue() instanceof NumericSearchNode) {
+                        StringSearchNode metadata =
+                            Optional.ofNullable(objectNode.get("metadata"))
+                                .map(x -> (ObjectSearchNode) x)
+                                .map(x -> x.get(entry.getKey()))
+                                .map(x -> (StringSearchNode) x)
+                                .orElse(null);
+                        buildNumeric(criteriaList, fullPath, (NumericSearchNode) entry.getValue(), metadata);
+                    }
+                    if (entry.getValue() instanceof BooleanSearchNode) {
+                        buildBoolean(criteriaList, fullPath, (BooleanSearchNode) entry.getValue());
+                    }
+                    if (entry.getValue() instanceof ObjectSearchNode) {
+                        buildObject(criteriaList, fullPath, (ObjectSearchNode) entry.getValue());
+                    }
+                });
         } else {
             throw new IllegalArgumentException();
         }
-        return criteria;
+        return new Criteria().andOperator(criteriaList);
     }
 
-    private static void buildString(Criteria criteria, List<String> fullPath, ObjectSearchNode objectNode) {
-        Map value = (Map) objectNode.getValue();
-        String path = ((StringSearchNode) value.get("path")).getValue();
+    private static void buildString(ArrayList<Criteria> criteriaList, List<String> fullPath,
+                                    StringSearchNode objectNode) {
         ArrayList<String> localPath = new ArrayList<>(fullPath);
-        localPath.add(path);
-        StringSearchNode stringValue = (StringSearchNode) value.get("value");
-        String searchValue = ((StringSearchNode) value.get("value")).getValue();
-        criteria.andOperator(
+        String searchValue = objectNode.getValue();
+        criteriaList.add(
             Criteria
                 .where(String.join(".", localPath))
                 .regex(Pattern.compile(searchValue, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE))
         );
     }
 
-    private static void buildNumeric(Criteria criteria, List<String> fullPath, ObjectSearchNode objectNode) {
-        Map value = (Map) objectNode.getValue();
-        String path = ((StringSearchNode) value.get("path")).getValue();
+    private static void buildNumeric(ArrayList<Criteria> criteriaList, List<String> fullPath,
+                                     NumericSearchNode objectNode,
+                                     StringSearchNode typeNode) {
         ArrayList<String> localPath = new ArrayList<>(fullPath);
-        localPath.add(path);
-        BigDecimal searchValue = ((NumericSearchNode) value.get("value")).getValue();
-        Object type = value.get("type");
-        if (Objects.nonNull(type)) {
-            String typeString = ((StringSearchNode) type).getValue();
+        BigDecimal searchValue = objectNode.getValue();
+        if (Objects.nonNull(typeNode)) {
+            String typeString = typeNode.getValue();
             switch (typeString) {
                 case "eq":
-                    criteria.andOperator(Criteria.where(String.join(".", localPath)).is(searchValue));
+                    criteriaList.add(Criteria.where(String.join(".", localPath)).is(searchValue));
                     break;
                 case "lt":
-                    criteria.andOperator(Criteria.where(String.join(".", localPath)).lt(searchValue));
+                    criteriaList.add(Criteria.where(String.join(".", localPath)).lt(searchValue));
                     break;
                 case "gt":
-                    criteria.andOperator(Criteria.where(String.join(".", localPath)).gt(searchValue));
+                    criteriaList.add(Criteria.where(String.join(".", localPath)).gt(searchValue));
                     break;
-                default: throw new IllegalArgumentException();
+                default:
+                    throw new IllegalArgumentException();
             }
         } else {
-            criteria.andOperator(Criteria.where(String.join(".", localPath)).is(searchValue));
+            criteriaList.add(Criteria.where(String.join(".", localPath)).is(searchValue));
         }
     }
 
-    private static void buildBoolean(Criteria criteria, List<String> fullPath, ObjectSearchNode objectNode) {
-        Map value = (Map) objectNode.getValue();
-        String path = ((StringSearchNode) value.get("path")).getValue();
+    private static void buildBoolean(ArrayList<Criteria> criteriaList, List<String> fullPath,
+                                     BooleanSearchNode objectNode) {
         ArrayList<String> localPath = new ArrayList<>(fullPath);
-        localPath.add(path);
-        Boolean booleanSearchValue = ((BooleanSearchNode) value.get("value")).getValue();
-        criteria.andOperator(
+        Boolean booleanSearchValue = objectNode.getValue();
+        criteriaList.add(
             Criteria
                 .where(String.join(".", localPath))
                 .is(booleanSearchValue)
         );
     }
 
-    private static void buildObject(Criteria criteria, List<String> fullPath, ObjectSearchNode objectNode) {
-        Map value = (Map) objectNode.getValue();
-        String path = ((StringSearchNode) value.get("path")).getValue();
-        ArrayList<String> localPath = new ArrayList<>(fullPath);
-        localPath.add(path);
-        ObjectSearchNode inner = (ObjectSearchNode) value.get("value");
-        if (inner.get("value") instanceof StringSearchNode) {
-            buildString(criteria, localPath, inner);
-        }
-        if (inner.get("value") instanceof NumericSearchNode) {
-            buildNumeric(criteria, localPath, inner);
-        }
-        if (inner.get("value") instanceof BooleanSearchNode) {
-            buildBoolean(criteria, localPath, inner);
-        }
-        if (inner.get("value") instanceof ObjectSearchNode) {
-            buildObject(criteria, localPath, inner);
-        }
+    private static void buildObject(ArrayList<Criteria> criteriaList, List<String> fullPath,
+                                    ObjectSearchNode objectNode) {
+        objectNode.getValue().entrySet().stream()
+            .filter(entry -> !entry.getKey().equals("metadata"))
+            .forEach(entry -> {
+                ArrayList<String> newFullPath = new ArrayList<>(fullPath);
+                newFullPath.add(entry.getKey());
+                if (entry.getValue() instanceof StringSearchNode) {
+                    buildString(criteriaList, newFullPath, (StringSearchNode) entry.getValue());
+                }
+                if (entry.getValue() instanceof NumericSearchNode) {
+                    StringSearchNode metadata =
+                        Optional.ofNullable(objectNode.get("metadata"))
+                            .map(x -> (ObjectSearchNode) x)
+                            .map(x -> x.get(entry.getKey()))
+                            .map(x -> (StringSearchNode) x)
+                            .orElse(null);
+                    buildNumeric(criteriaList, newFullPath, (NumericSearchNode) entry.getValue(),
+                        metadata);
+                }
+                if (entry.getValue() instanceof BooleanSearchNode) {
+                    buildBoolean(criteriaList, newFullPath, (BooleanSearchNode) entry.getValue());
+                }
+                if (entry.getValue() instanceof ObjectSearchNode) {
+                    buildObject(criteriaList, newFullPath, (ObjectSearchNode) entry.getValue());
+                }
+            });
     }
 
 }

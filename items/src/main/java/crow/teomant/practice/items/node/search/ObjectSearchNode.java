@@ -12,7 +12,7 @@ public class ObjectSearchNode extends AbstractSearchNode {
 
     private final Map<String, AbstractSearchNode> value;
 
-    public Object getValue() {
+    public Map<String, AbstractSearchNode> getValue() {
         return value;
     }
 

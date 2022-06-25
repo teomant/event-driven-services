@@ -29,7 +29,9 @@ public class ItemController {
     public UUID create(@PathVariable("typeId") UUID typeId) {
         ItemType type = repository.getType(typeId);
         HashMap<String, Object> inner = new HashMap<>();
-        inner.put("test", "teeeeeeeeeeeeeeeeeeeeeeeesting");
+        inner.put("test", "fuck");
+        inner.put("test1", 2);
+
         HashMap<String, Object> outer = new HashMap<>();
         outer.put("test", inner);
 
